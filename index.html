@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>抽凭助手 · 本地离线版</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>抽凭助手</h1>
+    <span class="ver">纯本地 · 不联网</span>
+  </div>
+  <p class="sub">
+    选文件 → 填科目 → 生成抽凭表。用不上的参数都收在「高级」里。
+    全部计算在你这台电脑的浏览器里完成：<b>不联网、不上传、不留副本</b>。
+  </p>
+</header>
+
+<main>
+
+  <div class="modes">
+    <button class="mode on" id="modeSimple">简易</button>
+    <button class="mode" id="modeExpert">高级</button>
+    <span class="muted" id="modeHint">选文件 → 填科目 → 点生成。其余都不用管。</span>
+  </div>
+
+  <!-- ================= 1 ================= -->
+  <section class="card">
+    <h2><span class="num">1</span>导入明细账</h2>
+
+    <div class="row">
+      <label class="file">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv" multiple>
+        <span class="btn">选择 Excel 文件</span>
+      </label>
+      <button class="btn ghost" id="demoBtn">没有文件？用示例数据试一下</button>
+    </div>
+    <p class="muted" id="fileInfo">可一次选多份（如按月导出的序时账），会合并成一个总体。数据不上传。</p>
+
+    <div class="note ok hidden" id="simpleSummary"></div>
+
+    <div class="grid3 hidden expert-only" id="loadPanel">
+      <div class="field">
+        <label for="sheetSelect">工作表（可多选：Ctrl + 点）</label>
+        <select id="sheetSelect" multiple size="4"></select>
+      </div>
+      <div class="field">
+        <label for="headerRowInput">表头所在行（Excel 行号）</label>
+        <div class="inline">
+          <input type="number" id="headerRowInput" min="1" step="1">
+          <button class="btn ghost" id="redetectBtn">重新识别</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="orientSelect">表的走向</label>
+        <select id="orientSelect">
+          <option value="auto">自动（横排读不出来时试竖排）</option>
+          <option value="normal">横排：一行一条明细</option>
+          <option value="transposed">竖排：一笔业务占一列</option>
+        </select>
+        <small>竖排表转置后才抽得动；转置后「原始行号」会变成「原始列号」。</small>
+      </div>
+    </div>
+
+    <div class="hidden expert-only" id="mapPanel">
+      <h3>列识别</h3>
+      <p class="hint">下面是程序猜的列。猜错就改，改完统计会跟着变。摘要是可选的，没有也能抽。
+        你改过的列名会被记住，下次遇到同样的写法自动认。</p>
+      <table class="mapTable" id="mapTable"></table>
+      <p class="hint" id="learnHint"></p>
+      <button class="btn ghost hidden" id="forgetBtn">忘掉记住的列名</button>
+    </div>
+
+    <div class="hidden" id="previewPanel">
+      <h3>解析结果（前 5 行）</h3>
+      <p class="hint">这里显示的是程序读懂之后的结果。日期、金额对不上，说明上面的列识别错了。</p>
+      <div class="scroll"><table class="data" id="previewTable"></table></div>
+    </div>
+
+    <div id="warnBox" class="hidden"></div>
+  </section>
+
+  <!-- ================= 2 ================= -->
+  <section class="card">
+    <h2><span class="num">2</span>设定总体与抽样</h2>
+
+    <div class="grid4">
+      <div class="field">
+        <label for="dateFrom">期间起</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="field">
+        <label for="dateTo">期间止</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="field">
+        <label for="accountText">科目关键词</label>
+        <input type="text" id="accountText" placeholder="如 应收账款（可空）">
+        <small>可空；多个用空格分开，也可以填科目编码。</small>
+      </div>
+      <div class="field">
+        <label for="sampleN">抽几笔</label>
+        <input type="number" id="sampleN" value="25" min="0">
+        <small>默认 25 笔，够一般科目用。</small>
+      </div>
+    </div>
+
+    <div class="grid4">
+      <div class="field">
+        <label for="methodSelect">怎么抽</label>
+        <select id="methodSelect">
+          <option value="systematic">大额全查 + 其余均匀抽（推荐）</option>
+          <option value="pps">按金额加权（金额越大越容易抽中）</option>
+          <option value="random">纯随机（每笔机会相同）</option>
+        </select>
+        <small>「金额越大越容易抽中」是统计上的正确做法，大额会自动进样本。</small>
+      </div>
+      <div class="field" id="thresholdField">
+        <label for="thresholdYuan">大额全查 ≥（元）</label>
+        <input type="text" id="thresholdYuan" value="0">
+        <small>达到这个金额的全部必查；数字按总体自动建议，可改。填 0 = 不分层。</small>
+      </div>
+      <div class="field expert-only">
+        <label for="unitSelect">抽样单元</label>
+        <select id="unitSelect">
+          <option value="line">明细行（默认）</option>
+          <option value="voucher">凭证（同一张凭证合并为一笔）</option>
+        </select>
+        <small>现场是按凭证翻的，选凭证可以避免重复翻同一本。</small>
+      </div>
+      <div class="field expert-only">
+        <label for="presetSelect">证据列方案</label>
+        <select id="presetSelect"></select>
+        <small>抽凭表会按这个方案带上空白勾稽列，现场手勾。</small>
+      </div>
+    </div>
+
+    <div class="grid4 expert-only">
+      <div class="field">
+        <label for="entitySelect">主体</label>
+        <select id="entitySelect"><option value="">全部主体</option></select>
+      </div>
+      <div class="field">
+        <label for="direction">方向</label>
+        <select id="direction">
+          <option value="all">借贷都看</option>
+          <option value="debit">只看借方</option>
+          <option value="credit">只看贷方</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="minYuan">金额下限（元）</label>
+        <input type="text" id="minYuan" placeholder="可空">
+      </div>
+      <div class="field">
+        <label for="maxYuan">金额上限（元）</label>
+        <input type="text" id="maxYuan" placeholder="可空">
+      </div>
+    </div>
+
+    <div class="grid4 expert-only">
+      <div class="field">
+        <label for="seedInput">随机种子</label>
+        <div class="inline">
+          <input type="number" id="seedInput" value="20260101">
+          <button class="btn ghost" id="seedBtn">换一个</button>
+        </div>
+        <small>种子和参数一致，任何人重跑都得到同一批样本。</small>
+      </div>
+    </div>
+
+    <div id="statsBox" class="stats"></div>
+  </section>
+
+  <!-- ================= 3 ================= -->
+  <section class="card">
+    <h2><span class="num">3</span>生成抽凭表</h2>
+
+    <div class="grid4">
+      <div class="field">
+        <label for="client">被审计单位</label>
+        <input type="text" id="client" placeholder="客户全称（可空）">
+      </div>
+      <div class="field expert-only">
+        <label for="indexNo">索引号</label>
+        <input type="text" id="indexNo" placeholder="如 B-3">
+      </div>
+      <div class="field expert-only">
+        <label for="preparer">编制人</label>
+        <input type="text" id="preparer">
+      </div>
+      <div class="field expert-only">
+        <label for="reviewer">复核人</label>
+        <input type="text" id="reviewer">
+      </div>
+    </div>
+
+    <button class="btn primary big" id="genBtn">生成并下载抽凭表</button>
+    <div id="resultBox"></div>
+  </section>
+
+  <!-- ================= 4 ================= -->
+  <section class="card">
+    <h2><span class="num">4</span>回录与评估</h2>
+    <p class="hint">
+      把现场填完的抽凭表再选进来（就是那份文件本身），算出例外与错报上限。
+      程序只给数字和对照，不替你下结论。
+    </p>
+
+    <div class="row">
+      <label class="file">
+        <input type="file" id="evalFile" accept=".xlsx,.xls">
+        <span class="btn">选择已填写的抽凭表</span>
+      </label>
+      <span class="muted" id="evalInfo">先在「核对结论」里填 相符／不符／未取得／不适用，并填错报金额。</span>
+    </div>
+
+    <div class="grid4 hidden" id="evalParams">
+      <div class="field">
+        <label for="alphaSelect">误受风险</label>
+        <select id="alphaSelect">
+          <option value="0.05">5%（95% 置信，常用）</option>
+          <option value="0.10">10%（90% 置信）</option>
+          <option value="0.01">1%（99% 置信）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tolerableYuan">可容忍错报（元）</label>
+        <input type="text" id="tolerableYuan" placeholder="如 50000">
+      </div>
+      <div class="field">
+        <label for="popYuan">总体账面金额（元）</label>
+        <input type="text" id="popYuan" placeholder="自动从「抽样信息」页读取">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <div class="muted small">上界是统计推断值，不是审计结论。</div>
+      </div>
+    </div>
+
+    <div id="evalResult"></div>
+
+    <div class="row hidden" id="evalActions">
+      <button class="btn" id="evalExportBtn">导出评估表 xlsx</button>
+      <span class="muted">一页纸：计数、例外汇总、错报上限、推断错报、例外明细。</span>
+    </div>
+  </section>
+
+  <p class="foot">
+    抽凭助手 <span id="verText">v0.x</span> · 纯本地单页工具，无网络请求。金额全部按「分」整数计算；被排除的每一行都留在「排除清单」里并附原始行号。
+    抽查结论由审计人员判断并签字，程序不代替判断。
+  </p>
+
+</main>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

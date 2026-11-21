@@ -1,0 +1,18 @@
+{
+  "aging_xushizhang.xlsx": {
+    "transactions": 5,
+    "skipped_no_amount": 0,
+    "debit_cents": 15000000,
+    "credit_cents": 6000000,
+    "total_abs_cents": 21000000,
+    "account_filter_receivable": 3
+  },
+  "valuation_xushizhang.xlsx": {
+    "transactions": 9,
+    "skipped_no_amount": 1,
+    "debit_cents": 33500000,
+    "credit_cents": 34500000,
+    "total_abs_cents": 68000000,
+    "account_filter_receivable": 1
+  }
+}

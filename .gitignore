@@ -1,0 +1,15 @@
+# 依赖与构建
+node_modules/
+*.log
+
+# 本机路径（run-all.ps1 会尝试加载，不存在也不影响）
+test/local-paths.ps1
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 发布包（挂到 GitHub Release，不进仓库）
+dist/
+*.zip

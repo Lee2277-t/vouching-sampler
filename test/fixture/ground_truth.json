@@ -1,0 +1,59 @@
+{
+  "client": "合成测试商贸有限公司",
+  "row_count_total": 47,
+  "included": 44,
+  "excluded": {
+    "date_missing": 1,
+    "out_of_period": 1,
+    "zero": 1
+  },
+  "total_abs_cents": 61777957,
+  "net_cents": 61177957,
+  "debit_cents": 61477957,
+  "credit_cents": 300000,
+  "threshold_cents": 10000000,
+  "full_count": 1,
+  "rest_count": 43,
+  "full_abs_cents": 50000000,
+  "rest_abs_cents": 11777957,
+  "specific": {
+    "text_amount_1234_56": 123456,
+    "three_decimal": 100001,
+    "paren_negative": -80000,
+    "trailing_minus": -50000,
+    "yuan_suffix": 120000,
+    "large": 50000000
+  },
+  "twolevel": {
+    "records": 5,
+    "total_abs_cents": 300000
+  },
+  "vertical": {
+    "records": 3,
+    "total_abs_cents": 60000
+  },
+  "realworld": {
+    "xushizhang": {
+      "records": 12,
+      "total_abs_cents": 1620000,
+      "first_voucher": "记-1",
+      "account": "应收账款-合成客户",
+      "account_code": "112201"
+    },
+    "sap": {
+      "records": 5,
+      "total_abs_cents": 250000
+    },
+    "tianzhi": {
+      "records": 4,
+      "total_abs_cents": 180000,
+      "first_voucher": "记-0001"
+    },
+    "balance_sheet_usable": false
+  },
+  "amount_mode": {
+    "count": 4,
+    "total_abs_cents": 445050,
+    "net_cents": -354950
+  }
+}
