@@ -2,6 +2,10 @@
 
 给审计实习用的本地抽凭工具。**双击 `index.html` 就能用**（Chrome / Edge），不用装 Python、不用联网。
 
+> 仓库：<https://github.com/Lee2277-t/vouching-sampler>
+> 直接下载：<https://github.com/Lee2277-t/vouching-sampler/releases/latest>
+> 想改代码就 `git clone` 本仓库，跑一遍测试：`powershell -File test\run-all.ps1`（需要 node 与 python）
+
 ## 60 秒上手
 
 1. 双击 `index.html`
