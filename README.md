@@ -237,3 +237,12 @@ test/fixture/              夹具 + 期望值 + 示例产出
 
 全部计算在浏览器本地完成，没有网络请求、没有埋点、没有外部字体。
 `wiring.test.js` 会检查页面里不存在任何 `http(s)` 外链、`fetch`、`XMLHttpRequest`，这条是自动守着的。
+
+
+![抽凭助手界面](docs/preview.png)
+
+**不想读文档？** [下载最新版 ZIP](../../releases/latest) → 解压 → 双击 index.html，就这样。仓库里也有 index.html，直接打开同样是完整功能。
+
+---
+
+更多离线小工具（审计、文档、系统）见 [awesome-lee2277](https://github.com/Lee2277-t/awesome-lee2277)。
